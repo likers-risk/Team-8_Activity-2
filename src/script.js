@@ -20,6 +20,15 @@ const parameters = {
   directionalLightIntensity: 0.8,
   pointLightColor: "#ffffff",
   pointLightIntensity: 1,
+  // Animation parameters
+  sharkSwimSpeed: 1,
+  sharkRotationSpeed: 0.5,
+  backgroundAnimationSpeed: 0.5,
+  enableSharkAnimation: true,
+  enableTailWag: true,
+  enableFinMovement: true,
+  fogDensity: 0.05,
+  enableBackgroundAnimation: true, // Toggle for background animation
 };
 
 // Shark color control
@@ -29,8 +38,14 @@ gui.addColor(parameters, "materialColor").onChange(() => {
 
 // Background color control
 gui.addColor(parameters, "backgroundColor").onChange(() => {
-  renderer.setClearColor(parameters.backgroundColor);
+  if (!parameters.enableBackgroundAnimation) {
+    renderer.setClearColor(parameters.backgroundColor);
+    scene.fog.color.set(parameters.backgroundColor);
+  }
 });
+
+// Background animation toggle
+gui.add(parameters, "enableBackgroundAnimation").name("Animate Background");
 
 // Ambient Light controls
 const ambientFolder = gui.addFolder("Ambient Light");
@@ -63,11 +78,36 @@ pointFolder.add(parameters, "pointLightIntensity", 0, 3, 0.01).onChange(() => {
   pointLight.intensity = parameters.pointLightIntensity;
 });
 
+// Animation controls
+const animationFolder = gui.addFolder("Animations");
+animationFolder.add(parameters, "enableSharkAnimation").name("Shark Swimming");
+animationFolder.add(parameters, "enableTailWag").name("Tail Wagging");
+animationFolder.add(parameters, "enableFinMovement").name("Fin Movement");
+animationFolder.add(parameters, "sharkSwimSpeed", 0, 3, 0.1).name("Swim Speed");
+animationFolder
+  .add(parameters, "sharkRotationSpeed", 0, 2, 0.1)
+  .name("Rotation Speed");
+animationFolder
+  .add(parameters, "backgroundAnimationSpeed", 0, 2, 0.1)
+  .name("Background Speed");
+
+// Fog controls
+const fogFolder = gui.addFolder("Underwater Fog");
+fogFolder
+  .add(parameters, "fogDensity", 0, 0.2, 0.001)
+  .name("Fog Density")
+  .onChange(() => {
+    scene.fog.density = parameters.fogDensity;
+  });
+
 // Canvas
 const canvas = document.querySelector("canvas.webgl");
 
 // Scene
 const scene = new THREE.Scene();
+
+// Add fog for underwater effect
+scene.fog = new THREE.FogExp2(0x1a3a52, parameters.fogDensity);
 
 /**
  * Shark
@@ -80,6 +120,7 @@ bodyGeometry.scale(2, 0.8, 0.8);
 const bodyMaterial = new THREE.MeshStandardMaterial({
   color: parameters.materialColor,
   roughness: 0.5,
+  metalness: 0.2,
 });
 const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
 shark.add(body);
@@ -132,6 +173,46 @@ rightEye.position.set(1.8, 0.3, -0.3);
 shark.add(rightEye);
 
 /**
+ * Particles (bubbles/plankton effect)
+ */
+const particlesGeometry = new THREE.BufferGeometry();
+const particlesCount = 500;
+const positions = new Float32Array(particlesCount * 3);
+
+for (let i = 0; i < particlesCount * 3; i++) {
+  positions[i] = (Math.random() - 0.5) * 50;
+}
+
+particlesGeometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(positions, 3)
+);
+
+const particlesMaterial = new THREE.PointsMaterial({
+  size: 0.1,
+  color: 0xffffff,
+  transparent: true,
+  opacity: 0.6,
+  sizeAttenuation: true,
+});
+
+const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+scene.add(particles);
+
+/**
+ * Ocean floor (simple plane)
+ */
+const floorGeometry = new THREE.PlaneGeometry(50, 50);
+const floorMaterial = new THREE.MeshStandardMaterial({
+  color: 0x1a4d2e,
+  roughness: 0.8,
+});
+const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -5;
+scene.add(floor);
+
+/**
  * Lights
  */
 // Ambient Light
@@ -141,12 +222,13 @@ const ambientLight = new THREE.AmbientLight(
 );
 scene.add(ambientLight);
 
-// Directional Light
+// Directional Light (simulating sunlight from above water)
 const directionalLight = new THREE.DirectionalLight(
   parameters.directionalLightColor,
   parameters.directionalLightIntensity
 );
-directionalLight.position.set(5, 5, 5);
+directionalLight.position.set(5, 10, 5);
+directionalLight.castShadow = true;
 scene.add(directionalLight);
 
 // Point Light
@@ -157,6 +239,11 @@ const pointLight = new THREE.PointLight(
 );
 pointLight.position.set(-3, 3, 3);
 scene.add(pointLight);
+
+// Additional underwater light (bluish)
+const underwaterLight = new THREE.PointLight(0x4da6ff, 0.5, 20);
+underwaterLight.position.set(0, -2, 5);
+scene.add(underwaterLight);
 
 /**
  * Sizes
@@ -200,6 +287,7 @@ controls.enableDamping = true;
  */
 const renderer = new THREE.WebGLRenderer({
   canvas: canvas,
+  antialias: true,
 });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -215,10 +303,64 @@ const clock = new THREE.Clock();
 const tick = () => {
   const elapsedTime = clock.getElapsedTime();
 
+  // Ocean wave background animation - only if enabled
+  if (parameters.enableBackgroundAnimation) {
+    const blue =
+      Math.sin(elapsedTime * parameters.backgroundAnimationSpeed) * 0.5 + 0.5;
+    const bgColor = new THREE.Color(0.1, 0.3 + blue * 0.2, 0.4 + blue * 0.3);
+    renderer.setClearColor(bgColor);
+    scene.fog.color = bgColor;
+  } else {
+    // Use static background color when animation is disabled
+    renderer.setClearColor(parameters.backgroundColor);
+    scene.fog.color.set(parameters.backgroundColor);
+  }
+
+  // Shark swimming animation
+  if (parameters.enableSharkAnimation) {
+    // Circular swimming motion
+    shark.position.x =
+      Math.cos(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
+    shark.position.z =
+      Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
+    shark.position.y =
+      Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.5) * 0.5;
+
+    // Shark rotation to follow path
+    shark.rotation.y = elapsedTime * parameters.sharkRotationSpeed * 0.3;
+  }
+
+  // Tail wagging animation
+  if (parameters.enableTailWag) {
+    tail.rotation.y = Math.sin(elapsedTime * 5) * 0.3;
+  }
+
+  // Fin movement
+  if (parameters.enableFinMovement) {
+    leftFin.rotation.z = Math.sin(elapsedTime * 4) * 0.2;
+    rightFin.rotation.z = Math.sin(elapsedTime * 4) * 0.2;
+    dorsalFin.rotation.x = Math.sin(elapsedTime * 3) * 0.1;
+  }
+
+  // Particles floating animation (bubbles/plankton)
+  particles.rotation.y = elapsedTime * 0.05;
+  const particlePositions = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particlesCount; i++) {
+    const i3 = i * 3;
+    particlePositions[i3 + 1] += Math.sin(elapsedTime + i) * 0.001;
+
+    // Reset particles that float too high
+    if (particlePositions[i3 + 1] > 25) {
+      particlePositions[i3 + 1] = -25;
+    }
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+
+  // Animate underwater light
+  underwaterLight.intensity = 0.5 + Math.sin(elapsedTime * 2) * 0.3;
+
   controls.update();
-
   renderer.render(scene, camera);
-
   window.requestAnimationFrame(tick);
 };
 
