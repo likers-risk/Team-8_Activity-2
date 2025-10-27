@@ -124,6 +124,8 @@ const bodyMaterial = new THREE.MeshStandardMaterial({
   metalness: 0.2,
 });
 const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+body.castShadow = true;
+body.receiveShadow = true;
 shark.add(body);
 
 // Head (cone for snout)
@@ -131,6 +133,8 @@ const headGeometry = new THREE.ConeGeometry(0.5, 1.5, 32);
 headGeometry.rotateZ(Math.PI / 2);
 const head = new THREE.Mesh(headGeometry, bodyMaterial);
 head.position.set(2, 0, 0);
+head.castShadow = true;
+head.receiveShadow = true;
 shark.add(head);
 
 // Dorsal fin (top fin)
@@ -138,6 +142,8 @@ const dorsalFinGeometry = new THREE.ConeGeometry(0.4, 1.2, 4);
 dorsalFinGeometry.rotateZ(Math.PI);
 const dorsalFin = new THREE.Mesh(dorsalFinGeometry, bodyMaterial);
 dorsalFin.position.set(0, 1.2, 0);
+dorsalFin.castShadow = true;
+dorsalFin.receiveShadow = true;
 shark.add(dorsalFin);
 
 // Tail
@@ -145,6 +151,8 @@ const tailGeometry = new THREE.ConeGeometry(0.8, 1.5, 4);
 tailGeometry.rotateZ(-Math.PI / 2);
 const tail = new THREE.Mesh(tailGeometry, bodyMaterial);
 tail.position.set(-2.5, 0.3, 0);
+tail.castShadow = true;
+tail.receiveShadow = true;
 shark.add(tail);
 
 // Side fins (pectoral fins)
@@ -154,11 +162,15 @@ finGeometry.rotateY(Math.PI / 4);
 
 const leftFin = new THREE.Mesh(finGeometry, bodyMaterial);
 leftFin.position.set(0.5, -0.5, 0.8);
+leftFin.castShadow = true;
+leftFin.receiveShadow = true;
 shark.add(leftFin);
 
 const rightFin = new THREE.Mesh(finGeometry.clone(), bodyMaterial);
 rightFin.position.set(0.5, -0.5, -0.8);
 rightFin.rotation.y *= -1;
+rightFin.castShadow = true;
+rightFin.receiveShadow = true;
 shark.add(rightFin);
 
 // Eyes
@@ -167,10 +179,12 @@ const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
 
 const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
 leftEye.position.set(1.8, 0.3, 0.3);
+leftEye.castShadow = true;
 shark.add(leftEye);
 
 const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
 rightEye.position.set(1.8, 0.3, -0.3);
+rightEye.castShadow = true;
 shark.add(rightEye);
 
 /**
@@ -184,6 +198,7 @@ const floorMaterial = new THREE.MeshStandardMaterial({
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -5;
+floor.receiveShadow = true;
 scene.add(floor);
 
 /**
