@@ -333,16 +333,22 @@ const tick = () => {
 
   // Shark swimming animation
   if (parameters.enableSharkAnimation) {
+    //Shark swimming animation
+    const nextX = Math.cos(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
+    const nextZ = Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
+
     // Circular swimming motion
-    shark.position.x =
-      Math.cos(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
-    shark.position.z =
-      Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.3) * 5;
+    shark.position.x = nextX;
+    shark.position.z = nextZ;
     shark.position.y =
       Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.5) * 0.5;
 
-    // Shark rotation to follow path
-    shark.rotation.y = elapsedTime * parameters.sharkRotationSpeed * 0.3;
+    // Calculate direction of movement and make shark face that way
+    const angle = Math.atan2(
+      Math.sin(elapsedTime * parameters.sharkSwimSpeed * 0.3),
+      Math.cos(elapsedTime * parameters.sharkSwimSpeed * 0.3)
+    );
+    shark.rotation.y = angle + Math.PI / 2; // Adjust offset as needed
   }
 
   // Tail wagging animation
