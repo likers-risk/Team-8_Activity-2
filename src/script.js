@@ -20,6 +20,7 @@ const parameters = {
   directionalLightIntensity: 0.8,
   pointLightColor: "#ffffff",
   pointLightIntensity: 1,
+
   // Animation parameters
   sharkSwimSpeed: 1,
   sharkRotationSpeed: 0.5,
@@ -28,7 +29,7 @@ const parameters = {
   enableTailWag: true,
   enableFinMovement: true,
   fogDensity: 0.05,
-  enableBackgroundAnimation: true, // Toggle for background animation
+  enableBackgroundAnimation: true,
 };
 
 // Shark color control
@@ -173,33 +174,6 @@ rightEye.position.set(1.8, 0.3, -0.3);
 shark.add(rightEye);
 
 /**
- * Particles (bubbles/plankton effect)
- */
-const particlesGeometry = new THREE.BufferGeometry();
-const particlesCount = 500;
-const positions = new Float32Array(particlesCount * 3);
-
-for (let i = 0; i < particlesCount * 3; i++) {
-  positions[i] = (Math.random() - 0.5) * 50;
-}
-
-particlesGeometry.setAttribute(
-  "position",
-  new THREE.BufferAttribute(positions, 3)
-);
-
-const particlesMaterial = new THREE.PointsMaterial({
-  size: 0.1,
-  color: 0xffffff,
-  transparent: true,
-  opacity: 0.6,
-  sizeAttenuation: true,
-});
-
-const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-scene.add(particles);
-
-/**
  * Ocean floor (simple plane)
  */
 const floorGeometry = new THREE.PlaneGeometry(50, 50);
@@ -341,20 +315,6 @@ const tick = () => {
     rightFin.rotation.z = Math.sin(elapsedTime * 4) * 0.2;
     dorsalFin.rotation.x = Math.sin(elapsedTime * 3) * 0.1;
   }
-
-  // Particles floating animation (bubbles/plankton)
-  particles.rotation.y = elapsedTime * 0.05;
-  const particlePositions = particles.geometry.attributes.position.array;
-  for (let i = 0; i < particlesCount; i++) {
-    const i3 = i * 3;
-    particlePositions[i3 + 1] += Math.sin(elapsedTime + i) * 0.001;
-
-    // Reset particles that float too high
-    if (particlePositions[i3 + 1] > 25) {
-      particlePositions[i3 + 1] = -25;
-    }
-  }
-  particles.geometry.attributes.position.needsUpdate = true;
 
   // Animate underwater light
   underwaterLight.intensity = 0.5 + Math.sin(elapsedTime * 2) * 0.3;
