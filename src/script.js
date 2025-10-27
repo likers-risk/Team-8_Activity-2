@@ -10,6 +10,14 @@ const gui = new dat.GUI();
 
 // Texture
 const textureLoader = new THREE.TextureLoader();
+const grassColorTexture = textureLoader.load("/textures/grass/color.jpg");
+const grassAmbientOcclusionTexture = textureLoader.load(
+  "/textures/grass/ambientOcclusion.jpg"
+);
+const grassNormalTexture = textureLoader.load("/textures/grass/normal.jpg");
+const grassRoughnessTexture = textureLoader.load(
+  "/textures/grass/roughness.jpg"
+);
 
 const parameters = {
   materialColor: "#4a5f7a", // Shark color
@@ -192,13 +200,31 @@ shark.add(rightEye);
  */
 const floorGeometry = new THREE.PlaneGeometry(50, 50);
 const floorMaterial = new THREE.MeshStandardMaterial({
-  color: 0x1a4d2e,
-  roughness: 0.8,
+  map: grassColorTexture,
+  aoMap: grassAmbientOcclusionTexture,
+  normalMap: grassNormalTexture,
+  roughnessMap: grassRoughnessTexture,
 });
+grassColorTexture.repeat.set(8, 8);
+grassAmbientOcclusionTexture.repeat.set(8, 8);
+grassNormalTexture.repeat.set(8, 8);
+grassRoughnessTexture.repeat.set(8, 8);
 const floor = new THREE.Mesh(floorGeometry, floorMaterial);
 floor.rotation.x = -Math.PI / 2;
 floor.position.y = -5;
 floor.receiveShadow = true;
+floor.geometry.setAttribute(
+  "uv2",
+  new THREE.Float32BufferAttribute(floor.geometry.attributes.uv.array, 2)
+);
+grassColorTexture.wrapS = THREE.RepeatWrapping;
+grassAmbientOcclusionTexture.wrapS = THREE.RepeatWrapping;
+grassNormalTexture.wrapS = THREE.RepeatWrapping;
+grassRoughnessTexture.wrapS = THREE.RepeatWrapping;
+grassColorTexture.wrapT = THREE.RepeatWrapping;
+grassAmbientOcclusionTexture.wrapT = THREE.RepeatWrapping;
+grassNormalTexture.wrapT = THREE.RepeatWrapping;
+grassRoughnessTexture.wrapT = THREE.RepeatWrapping;
 scene.add(floor);
 
 /**
