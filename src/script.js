@@ -244,6 +244,17 @@ const directionalLight = new THREE.DirectionalLight(
 );
 directionalLight.position.set(5, 10, 5);
 directionalLight.castShadow = true;
+directionalLight.shadow.camera.left = -15;
+directionalLight.shadow.camera.right = 15;
+directionalLight.shadow.camera.top = 15;
+directionalLight.shadow.camera.bottom = -15;
+directionalLight.shadow.camera.near = 0.1;
+directionalLight.shadow.camera.far = 50;
+directionalLight.shadow.mapSize.width = 2048;
+directionalLight.shadow.mapSize.height = 2048;
+const helper = new THREE.CameraHelper(directionalLight.shadow.camera);
+scene.add(helper);
+gui.add(helper, "visible").name("dlLight Helper");
 scene.add(directionalLight);
 
 // Point Light
@@ -258,6 +269,7 @@ scene.add(pointLight);
 // Additional underwater light (bluish)
 const underwaterLight = new THREE.PointLight(0x4da6ff, 0.5, 20);
 underwaterLight.position.set(0, -2, 5);
+underwaterLight.castShadow = true;
 scene.add(underwaterLight);
 
 /**
